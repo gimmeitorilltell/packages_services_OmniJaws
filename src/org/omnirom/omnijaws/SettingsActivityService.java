@@ -20,6 +20,7 @@ package org.omnirom.omnijaws;
 import android.Manifest;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -31,7 +32,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import android.preference.CheckBoxPreference;
+import android.preference.SwitchPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
@@ -55,7 +56,7 @@ public class SettingsActivityService extends PreferenceActivity implements OnPre
 
     private SharedPreferences mPrefs;
     private ListPreference mProvider;
-    private CheckBoxPreference mCustomLocation;
+    private SwitchPreference mCustomLocation;
     private ListPreference mUnits;
     private SwitchPreference mEnable;
     private boolean mTriggerUpdate;
@@ -87,7 +88,7 @@ public class SettingsActivityService extends PreferenceActivity implements OnPre
         final PreferenceScreen prefScreen = getPreferenceScreen();
         mEnable = (SwitchPreference) findPreference(Config.PREF_KEY_ENABLE);
 
-        mCustomLocation = (CheckBoxPreference) findPreference(Config.PREF_KEY_CUSTOM_LOCATION);
+        mCustomLocation = (SwitchPreference) findPreference(Config.PREF_KEY_CUSTOM_LOCATION);
 
         mProvider = (ListPreference) findPreference(Config.PREF_KEY_PROVIDER);
         mProvider.setOnPreferenceChangeListener(this);
@@ -131,6 +132,8 @@ public class SettingsActivityService extends PreferenceActivity implements OnPre
                 // no longer found
                 settingHeaderPackage = DEFAULT_WEATHER_ICON_PACKAGE;
                 Config.setIconPack(this, settingHeaderPackage);
+                Settings.System.putString(getContentResolver(),
+                            Settings.System.OMNIJAWS_WEATHER_ICON_PACK, settingHeaderPackage);
                 valueIndex = mWeatherIconPack.findIndexOfValue(settingHeaderPackage);
             }
             mWeatherIconPack.setValueIndex(valueIndex >= 0 ? valueIndex : 0);
@@ -225,6 +228,8 @@ public class SettingsActivityService extends PreferenceActivity implements OnPre
         } else if (preference == mWeatherIconPack) {
             String value = (String) newValue;
             Config.setIconPack(this, value);
+            Settings.System.putString(getContentResolver(),
+                        Settings.System.OMNIJAWS_WEATHER_ICON_PACK, value);
             int valueIndex = mWeatherIconPack.findIndexOfValue(value);
             mWeatherIconPack.setSummary(mWeatherIconPack.getEntries()[valueIndex]);
             return true;
@@ -325,6 +330,10 @@ public class SettingsActivityService extends PreferenceActivity implements OnPre
         // stop any pending
         WeatherService.cancelUpdate(this);
         WeatherService.stop(this);
+
+        // Disable statusbar weather
+        Settings.System.putInt(getContentResolver(),
+                Settings.System.STATUS_BAR_SHOW_WEATHER_TEMP, 0);
     }
 
     @Override

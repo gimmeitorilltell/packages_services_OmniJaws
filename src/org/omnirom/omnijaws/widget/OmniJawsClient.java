@@ -311,7 +311,7 @@ public class OmniJawsClient {
     }
 
     private String getWindUnit() {
-        return mMetric ? mContext.getString(R.string.weather_kph) : mContext.getString(R.string.weather_mph);
+        return mMetric ? "km/h":"mph";
     }
 
     private boolean isAvailableApp(String packageName) {
